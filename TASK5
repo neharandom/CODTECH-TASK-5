@@ -1,0 +1,149 @@
+EMPLOYEE MANAGEMENT SYSTEM
+mysql> create database nehar;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> use nehar;
+Database changed
+mysql> CREATE TABLE Departments (
+    ->     DepartmentID INT PRIMARY KEY AUTO_INCREMENT,
+    ->     DepartmentName VARCHAR(100) NOT NULL,
+    ->     Location VARCHAR(100)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> desc departments;
++----------------+--------------+------+-----+---------+----------------+
+| Field          | Type         | Null | Key | Default | Extra          |
++----------------+--------------+------+-----+---------+----------------+
+| DepartmentID   | int          | NO   | PRI | NULL    | auto_increment |
+| DepartmentName | varchar(100) | NO   |     | NULL    |                |
+| Location       | varchar(100) | YES  |     | NULL    |                |
++----------------+--------------+------+-----+---------+----------------+
+3 rows in set (0.06 sec)
+
+mysql> CREATE TABLE JobPositions (
+    ->     PositionID INT PRIMARY KEY AUTO_INCREMENT,
+    ->     PositionTitle VARCHAR(100) NOT NULL,
+    ->     Salary DECIMAL(10, 2) NOT NULL
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> desc jobpositions;
++---------------+---------------+------+-----+---------+----------------+
+| Field         | Type          | Null | Key | Default | Extra          |
++---------------+---------------+------+-----+---------+----------------+
+| PositionID    | int           | NO   | PRI | NULL    | auto_increment |
+| PositionTitle | varchar(100)  | NO   |     | NULL    |                |
+| Salary        | decimal(10,2) | NO   |     | NULL    |                |
++---------------+---------------+------+-----+---------+----------------+
+3 rows in set (0.00 sec)
+
+mysql> CREATE TABLE Employees (
+    ->     EmployeeID INT PRIMARY KEY AUTO_INCREMENT,
+    ->     FirstName VARCHAR(50) NOT NULL,
+    ->     LastName VARCHAR(50) NOT NULL,
+    ->     Email VARCHAR(100) UNIQUE NOT NULL,
+    ->     PhoneNumber VARCHAR(15),
+    ->     HireDate DATE NOT NULL,
+    ->     DepartmentID INT,
+    ->     PositionID INT,
+    ->     FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID),
+    ->     FOREIGN KEY (PositionID) REFERENCES JobPositions(PositionID)
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> desc employees;
++--------------+--------------+------+-----+---------+----------------+
+| Field        | Type         | Null | Key | Default | Extra          |
++--------------+--------------+------+-----+---------+----------------+
+| EmployeeID   | int          | NO   | PRI | NULL    | auto_increment |
+| FirstName    | varchar(50)  | NO   |     | NULL    |                |
+| LastName     | varchar(50)  | NO   |     | NULL    |                |
+| Email        | varchar(100) | NO   | UNI | NULL    |                |
+| PhoneNumber  | varchar(15)  | YES  |     | NULL    |                |
+| HireDate     | date         | NO   |     | NULL    |                |
+| DepartmentID | int          | YES  | MUL | NULL    |                |
+| PositionID   | int          | YES  | MUL | NULL    |                |
++--------------+--------------+------+-----+---------+----------------+
+8 rows in set (0.00 sec)
+
+mysql> INSERT INTO Departments (DepartmentName, Location)
+    -> VALUES ('Human Resources', 'Building A');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select * from departments;
++--------------+-----------------+------------+
+| DepartmentID | DepartmentName  | Location   |
++--------------+-----------------+------------+
+|            1 | Human Resources | Building A |
++--------------+-----------------+------------+
+1 row in set (0.00 sec)
+
+mysql> INSERT INTO JobPositions (PositionTitle, Salary)
+    -> VALUES ('Software Engineer', 80000.00);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from jobpositions;
++------------+-------------------+----------+
+| PositionID | PositionTitle     | Salary   |
++------------+-------------------+----------+
+|          1 | Software Engineer | 80000.00 |
++------------+-------------------+----------+
+1 row in set (0.01 sec)
+
+mysql> INSERT INTO Employees (FirstName, LastName, Email, PhoneNumber, HireDate, DepartmentID, PositionID)
+    -> VALUES ('John', 'Doe', 'john.doe@example.com', '555-1234', '2024-01-15', 1, 1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from employees;
++------------+-----------+----------+----------------------+-------------+------------+--------------+------------+
+| EmployeeID | FirstName | LastName | Email                | PhoneNumber | HireDate   | DepartmentID | PositionID |
++------------+-----------+----------+----------------------+-------------+------------+--------------+------------+
+|          1 | John      | Doe      | john.doe@example.com | 555-1234    | 2024-01-15 |            1 |          1 |
++------------+-----------+----------+----------------------+-------------+------------+--------------+------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT e.EmployeeID, e.FirstName, e.LastName, d.DepartmentName, j.PositionTitle
+    -> FROM Employees e
+    -> JOIN Departments d ON e.DepartmentID = d.DepartmentID
+    -> JOIN JobPositions j ON e.PositionID = j.PositionID;
++------------+-----------+----------+-----------------+-------------------+
+| EmployeeID | FirstName | LastName | DepartmentName  | PositionTitle     |
++------------+-----------+----------+-----------------+-------------------+
+|          1 | John      | Doe      | Human Resources | Software Engineer |
++------------+-----------+----------+-----------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> UPDATE Employees
+    -> SET PositionID = (SELECT PositionID FROM JobPositions WHERE PositionTitle = 'Senior Software Engineer')
+    ->
+Query OK, 1 row affected (0.02 sec) WHERE EmployeeID = 1;  -- Assuming EmployeeID 1 is John Doe
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select *  from employees;
++------------+-----------+----------+----------------------+-------------+------------+--------------+------------+
+| EmployeeID | FirstName | LastName | Email                | PhoneNumber | HireDate   | DepartmentID | PositionID |
++------------+-----------+----------+----------------------+-------------+------------+--------------+------------+
+|          1 | John      | Doe      | john.doe@example.com | 555-1234    | 2024-01-15 |            1 |       NULL |
++------------+-----------+----------+----------------------+-------------+------------+--------------+------------+
+1 row in set (0.00 sec)
+
+mysql> DELETE FROM Departments
+    -> WHERE DepartmentID = 1;  -- Ensure no employees are linked before deletion
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`nehar`.`employees`, CONSTRAINT `employees_ibfk_1` FOREIGN KEY (`DepartmentID`) REFERENCES `departments` (`DepartmentID`))
+mysql> SELECT e.FirstName, e.LastName
+    -> FROM Employees e
+    -> WHERE e.DepartmentID = (SELECT DepartmentID FROM Departments WHERE DepartmentName = 'Human Resources');
++-----------+----------+
+| FirstName | LastName |
++-----------+----------+
+| John      | Doe      |
++-----------+----------+
+1 row in set (0.00 sec)
+
+mysql> SELECT j.PositionTitle, AVG(j.Salary) AS AverageSalary
+    -> FROM Employees e
+    -> FROM Employees e
+
+    -> GROUP BY j.PositionTitle;
+Empty set (0.00 sec)
